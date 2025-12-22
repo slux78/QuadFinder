@@ -2,6 +2,8 @@
 
 **QuadFinder** is a powerful, native macOS file manager designed for multitasking. It features a unique four-pane layout that allows you to manage files across multiple directories simultaneously with ease. Built with Swift, SwiftUI, and AppKit.
 
+![QuadFinder Snapshot](images/snapshot.png)
+
 ## Key Features
 
 -   **4-Pane Layout**: View and interact with four different directories at once.
