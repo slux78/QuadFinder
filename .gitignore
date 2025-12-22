@@ -1,0 +1,14 @@
+# Build Artifacts
+.build/
+.swiftpm/
+QuadFinder.app/
+*.o
+*.dylib
+*.a
+
+# macOS
+.DS_Store
+
+# Temporary Test Dirs
+RealDir/
+LinkDir/
