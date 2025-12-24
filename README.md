@@ -23,11 +23,16 @@
 | **Get Info** | `Cmd` + `I` |
 | **Quick Look** | `Space` |
 | **Copy** | `Cmd` + `C` |
-| **Paste** | `Cmd` + `V` |
+| **Paste (Always Copy)** | `Cmd` + `V` |
 | **New Folder** | Right Click -> New Folder |
 | **Rename** | Click Name or Right Click |
 | **Add to Favorites** | `Ctrl` + `D` |
 | **Go to Favorite** | `Ctrl` + `G` |
+| **Move to Trash** | `Cmd` + `Backspace` |
+| **Go to Parent** | `Cmd` + `Up Arrow` |
+| **Open Selected** | `Cmd` + `Down Arrow` |
+| **Go Back** | `Cmd` + `[` |
+| **Go Forward** | `Cmd` + `]` |
 | **Open Help** | `Help` -> `QuadFinder Help` |
 
 ## Building the App
