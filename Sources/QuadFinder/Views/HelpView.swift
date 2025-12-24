@@ -86,6 +86,8 @@ struct SectionView: View {
 
 struct ShortcutsTable: View {
     let shortcuts = [
+        ("Add to Favorites", "Ctrl + D"),
+        ("Go to Favorite", "Ctrl + G"),
         ("Maximize / Restore Pane", "Ctrl + Shift + Enter"),
         ("Find / Search", "⌘ + F"),
         ("Get Info", "⌘ + I"),

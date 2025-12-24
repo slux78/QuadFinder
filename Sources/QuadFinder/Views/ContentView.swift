@@ -35,64 +35,9 @@ struct ContentView: View {
     var body: some View {
         GeometryReader { geometry in
             if let maxId = maximizedPaneId {
-                // Maximized Mode
-                Group {
-                    if maxId == pane1.id {
-                        FilePaneView(state: pane1, activePaneId: $activePaneId)
-                    } else if maxId == pane2.id {
-                        FilePaneView(state: pane2, activePaneId: $activePaneId)
-                    } else if maxId == pane3.id {
-                        FilePaneView(state: pane3, activePaneId: $activePaneId)
-                    } else if maxId == pane4.id {
-                        FilePaneView(state: pane4, activePaneId: $activePaneId)
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                maximizedView(maxId: maxId)
             } else {
-                // Quad Mode
-                VStack(spacing: 0) {
-                    // Top Row
-                    HStack(spacing: 0) {
-                        FilePaneView(state: pane1, activePaneId: $activePaneId)
-                            .frame(width: max(0, (geometry.size.width - 8) * hSplitTop))
-                        
-                        QuadResizeHandle(orientation: .horizontal, onDrag: { delta in
-                            let totalWidth = geometry.size.width - 8
-                            let newRatio = hSplitTop + (delta / totalWidth)
-                            hSplitTop = max(0.1, min(0.9, newRatio))
-                        }, onReset: {
-                            withAnimation { hSplitTop = 0.5 }
-                        })
-                        
-                        FilePaneView(state: pane2, activePaneId: $activePaneId)
-                    }
-                    .frame(height: max(0, (geometry.size.height - 8) * vSplit))
-                    
-                    // Vertical Divider
-                    QuadResizeHandle(orientation: .vertical, onDrag: { delta in
-                        let totalHeight = geometry.size.height - 8
-                        let newRatio = vSplit + (delta / totalHeight)
-                        vSplit = max(0.1, min(0.9, newRatio))
-                    }, onReset: {
-                        withAnimation { vSplit = 0.5 }
-                    })
-                    
-                    // Bottom Row
-                    HStack(spacing: 0) {
-                        FilePaneView(state: pane3, activePaneId: $activePaneId)
-                            .frame(width: max(0, (geometry.size.width - 8) * hSplitBottom))
-                        
-                        QuadResizeHandle(orientation: .horizontal, onDrag: { delta in
-                            let totalWidth = geometry.size.width - 8
-                            let newRatio = hSplitBottom + (delta / totalWidth)
-                            hSplitBottom = max(0.1, min(0.9, newRatio))
-                        }, onReset: {
-                            withAnimation { hSplitBottom = 0.5 }
-                        })
-                        
-                        FilePaneView(state: pane4, activePaneId: $activePaneId)
-                    }
-                }
+                quadLayout(geometry: geometry)
             }
         }
         .frame(minWidth: 800, minHeight: 600)
@@ -127,5 +72,124 @@ struct ContentView: View {
         .background(
             WindowAccessor()
         )
+        // Favorites Sheets
+        .sheet(item: $activeSheetInfo) { info in
+            AddFavoriteView(initialPath: info.path, onSave: { name, path in
+                FavoritesManager.shared.add(name: name, path: path)
+                activeSheetInfo = nil
+            }, onCancel: {
+                activeSheetInfo = nil
+            })
+        }
+        .sheet(isPresented: $showingPickerFav) {
+            FavoritesPickerView(onSelect: { path in
+                navigateTo(path)
+                showingPickerFav = false
+            }, onCancel: {
+                showingPickerFav = false
+            })
+        }
+        // Favorites Shortcuts
+        .onReceive(NotificationCenter.default.publisher(for: .requestAddFavorite)) { _ in
+            if let path = currentActivePath {
+                activeSheetInfo = ActiveSheetInfo(path: path)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .requestGoFavorites)) { _ in
+            showingPickerFav = true
+        }
+    }
+    
+    // MARK: - Favorites Helpers
+    struct ActiveSheetInfo: Identifiable {
+        let id = UUID()
+        let path: String
+    }
+    
+    @State private var activeSheetInfo: ActiveSheetInfo?
+    @State private var showingPickerFav = false
+    
+    // Legacy removed: pendingAddFavoritePath, showingAddFav
+    
+    private var currentActivePath: String? {
+        guard let activeId = activePaneId else {
+            NSLog("DEBUG: activePaneId is nil")
+            return nil
+        }
+        let pane = [pane1, pane2, pane3, pane4].first { $0.id == activeId }
+        let path = pane?.currentPath.standardized.path
+        NSLog("DEBUG: currentActivePath requested. Pane found: \(pane != nil). Path: '\(path ?? "nil")'")
+        return path
+    }
+    
+    private func navigateTo(_ path: String) {
+        NSLog("DEBUG: navigateTo called with \(path)")
+        guard let activeId = activePaneId else { return }
+        if let pane = [pane1, pane2, pane3, pane4].first(where: { $0.id == activeId }) {
+            pane.navigateTo(URL(fileURLWithPath: path))
+        }
+    }
+    
+    @ViewBuilder
+    private func maximizedView(maxId: UUID) -> some View {
+        Group {
+            if maxId == pane1.id {
+                FilePaneView(state: pane1, activePaneId: $activePaneId)
+            } else if maxId == pane2.id {
+                FilePaneView(state: pane2, activePaneId: $activePaneId)
+            } else if maxId == pane3.id {
+                FilePaneView(state: pane3, activePaneId: $activePaneId)
+            } else if maxId == pane4.id {
+                FilePaneView(state: pane4, activePaneId: $activePaneId)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    @ViewBuilder
+    private func quadLayout(geometry: GeometryProxy) -> some View {
+        VStack(spacing: 0) {
+            // Top Row
+            HStack(spacing: 0) {
+                FilePaneView(state: pane1, activePaneId: $activePaneId)
+                    .frame(width: max(0, (geometry.size.width - 8) * hSplitTop))
+                
+                QuadResizeHandle(orientation: .horizontal, onDrag: { delta in
+                    let totalWidth = geometry.size.width - 8
+                    let newRatio = hSplitTop + (delta / totalWidth)
+                    hSplitTop = max(0.1, min(0.9, newRatio))
+                }, onReset: {
+                    withAnimation { hSplitTop = 0.5 }
+                })
+                
+                FilePaneView(state: pane2, activePaneId: $activePaneId)
+            }
+            .frame(height: max(0, (geometry.size.height - 8) * vSplit))
+            
+            // Vertical Divider
+            QuadResizeHandle(orientation: .vertical, onDrag: { delta in
+                let totalHeight = geometry.size.height - 8
+                let newRatio = vSplit + (delta / totalHeight)
+                vSplit = max(0.1, min(0.9, newRatio))
+            }, onReset: {
+                withAnimation { vSplit = 0.5 }
+            })
+            
+            // Bottom Row
+            HStack(spacing: 0) {
+                FilePaneView(state: pane3, activePaneId: $activePaneId)
+                    .frame(width: max(0, (geometry.size.width - 8) * hSplitBottom))
+                
+                QuadResizeHandle(orientation: .horizontal, onDrag: { delta in
+                    let totalWidth = geometry.size.width - 8
+                    let newRatio = hSplitBottom + (delta / totalWidth)
+                    hSplitBottom = max(0.1, min(0.9, newRatio))
+                }, onReset: {
+                    withAnimation { hSplitBottom = 0.5 }
+                })
+                
+                FilePaneView(state: pane4, activePaneId: $activePaneId)
+            }
+        }
     }
 }

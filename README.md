@@ -10,6 +10,7 @@
 -   **Maximize Pane**: Focus on a single task by maximizing any pane to full screen (`Ctrl + Shift + Enter`). Toggle back instantly.
 -   **Drag & Drop**: Seamlessly move or copy files between panes.
 -   **Smart Search**: Integrated file search within each pane (`Cmd + F`).
+-   **Favorites System**: Save frequently accessed directories. Add via `Ctrl + D`, jump via `Ctrl + G`.
 -   **Native Experience**: Supports standard macOS features like Quick Look (`Space`), Get Info (`Cmd + I`), and Context Menus.
 -   **Help & Discovery**: Built-in Help window with a searchable list of features and shortcuts.
 
@@ -25,6 +26,8 @@
 | **Paste** | `Cmd` + `V` |
 | **New Folder** | Right Click -> New Folder |
 | **Rename** | Click Name or Right Click |
+| **Add to Favorites** | `Ctrl` + `D` |
+| **Go to Favorite** | `Ctrl` + `G` |
 | **Open Help** | `Help` -> `QuadFinder Help` |
 
 ## Building the App
