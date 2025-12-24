@@ -75,6 +75,7 @@ cp ".build/release/${APP_NAME}" "${APP_BUNDLE}/Contents/MacOS/"
 
 # Ad-hoc Signing to prevent "Application is damaged" on local execution
 echo "Ad-hoc Signing..."
+find "${APP_BUNDLE}" -name ".DS_Store" -delete
 xattr -cr "${APP_BUNDLE}"
 codesign -s - --deep --force --options runtime "${APP_BUNDLE}"
 
