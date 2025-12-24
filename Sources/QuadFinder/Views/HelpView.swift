@@ -102,6 +102,10 @@ struct ShortcutsTable: View {
         ("Copy", "⌘ + C"),
         ("Paste (Always Copy)", "⌘ + V"),
         ("Move to Trash", "⌘ + Backspace"),
+        ("Go to Parent", "⌘ + Up"),
+        ("Open Selected", "⌘ + Down"),
+        ("Go Back", "⌘ + ["),
+        ("Go Forward", "⌘ + ]"),
         ("New Folder", "Right Click -> New Folder"),
         ("Rename", "Click Name or Right Click")
     ]

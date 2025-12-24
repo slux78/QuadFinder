@@ -290,6 +290,38 @@ struct FilePaneView: View {
              .disabled(!isActive)
              .opacity(0)
         )
+        .background(
+             Button("") {
+                 state.goUp()
+             }
+             .keyboardShortcut(.upArrow, modifiers: .command)
+             .disabled(!isActive)
+             .opacity(0)
+        )
+        .background(
+             Button("") {
+                 openSelection()
+             }
+             .keyboardShortcut(.downArrow, modifiers: .command)
+             .disabled(!isActive)
+             .opacity(0)
+        )
+        .background(
+             Button("") {
+                 state.goBack()
+             }
+             .keyboardShortcut("[", modifiers: .command)
+             .disabled(!isActive)
+             .opacity(0)
+        )
+        .background(
+             Button("") {
+                 state.goForward()
+             }
+             .keyboardShortcut("]", modifiers: .command)
+             .disabled(!isActive)
+             .opacity(0)
+        )
     }
     
     private func copySelection() {
@@ -317,6 +349,27 @@ struct FilePaneView: View {
         
         for item in items {
             state.moveToTrash(item, undoManager: undoManager)
+        }
+    }
+    
+    private func openSelection() {
+        guard let firstId = state.selectedItems.first,
+              let item = state.items.first(where: { $0.id == firstId }) ?? state.searchResults.first(where: { $0.id == firstId }) else { return }
+        
+        if item.isDirectory && !item.isPackage {
+            state.navigateTo(item.url)
+        } else if item.url.pathExtension.lowercased() == "dmg" {
+            // How to mount from here? 
+            // We can just use NSWorkspace, and rely on our sidebar/daemon to notice? 
+            // Or we can invoke hdiutil via Process here too?
+            // Duplicating logic is slightly messy but safe for now.
+            // Or better: Just open it standard way, if system handles it.
+            // But user specifically liked double-click custom mount.
+            // Let's replicate mount logic or try to call it through notification?
+            // For now, let's just open standard.
+            NSWorkspace.shared.open(item.url)
+        } else {
+            NSWorkspace.shared.open(item.url)
         }
     }
     
