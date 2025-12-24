@@ -282,6 +282,14 @@ struct FilePaneView: View {
              .disabled(!isActive)
              .opacity(0)
         )
+        .background(
+             Button("") {
+                 deleteSelection()
+             }
+             .keyboardShortcut(.delete, modifiers: .command)
+             .disabled(!isActive)
+             .opacity(0)
+        )
     }
     
     private func copySelection() {
@@ -299,7 +307,16 @@ struct FilePaneView: View {
         
         print("Pasting \(urls.count) items")
         Task {
-            await state.handleDrop(urls: urls, undoManager: undoManager)
+            await state.handleDrop(urls: urls, undoManager: undoManager, alwaysCopy: true)
+        }
+    }
+    
+    private func deleteSelection() {
+        let items = state.items.filter { state.selectedItems.contains($0.id) }
+        guard !items.isEmpty else { return }
+        
+        for item in items {
+            state.moveToTrash(item, undoManager: undoManager)
         }
     }
     

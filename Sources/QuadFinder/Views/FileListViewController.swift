@@ -27,7 +27,7 @@ class FileListViewController: NSViewController, @preconcurrency NSTableViewDataS
     var onFocus: (() -> Void)?
     var cancellables = Set<AnyCancellable>()
     
-    let tableView = NSTableView()
+    let tableView = QuadTableView()
     let scrollView = NSScrollView()
     
     // Identifier for column
@@ -57,9 +57,13 @@ class FileListViewController: NSViewController, @preconcurrency NSTableViewDataS
         ])
         
         // Setup TableView
-        // Setup TableView
         tableView.delegate = self
         tableView.dataSource = self
+        
+        // Custom Focus Handling
+        tableView.onMouseDown = { [weak self] in
+            self?.onFocus?()
+        }
         
         let headerView = QuadTableHeaderView()
         headerView.fileListController = self
@@ -594,6 +598,10 @@ class FileListViewController: NSViewController, @preconcurrency NSTableViewDataS
         DraggingManager.shared.clear()
     }
     
+    func tableView(_ tableView: NSTableView, draggingSession session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
+        return .every
+    }
+    
     func tableView(_ tableView: NSTableView, validateDrop info: NSDraggingInfo, proposedRow row: Int, proposedDropOperation dropOperation: NSTableView.DropOperation) -> NSDragOperation {
         guard let state = paneState else { return [] }
         
@@ -766,6 +774,15 @@ class QuadTableHeaderView: NSTableHeaderView {
             }
         }
         
+        super.mouseDown(with: event)
+    }
+}
+
+class QuadTableView: NSTableView {
+    var onMouseDown: (() -> Void)?
+    
+    override func mouseDown(with event: NSEvent) {
+        onMouseDown?()
         super.mouseDown(with: event)
     }
 }

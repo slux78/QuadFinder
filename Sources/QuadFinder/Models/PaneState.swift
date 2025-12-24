@@ -316,7 +316,7 @@ class PaneState: ObservableObject, Identifiable {
         }
     }
     
-    func handleDrop(urls: [URL], to target: URL? = nil, undoManager: UndoManager? = nil) async -> Bool {
+    func handleDrop(urls: [URL], to target: URL? = nil, undoManager: UndoManager? = nil, alwaysCopy: Bool = false) async -> Bool {
         let destination = target ?? currentPath
         NSLog("DEBUG: PaneState.handleDrop called. Destination: \(destination.path)")
         NSLog("DEBUG: Processing \(urls.count) URLs")
@@ -333,11 +333,38 @@ class PaneState: ObservableObject, Identifiable {
              // Check if file is being dropped onto itself (if target was a file? logic prevents that in View, but check here)
              // But here destination is directory.
              
-             let destURL = destination.appendingPathComponent(url.lastPathComponent)
+             var destURL = destination.appendingPathComponent(url.lastPathComponent)
              
              if url.path == destURL.path {
-                 NSLog("DEBUG: Skipping \(url.lastPathComponent) (Same file)")
-                 continue
+                 if alwaysCopy {
+                     // Auto-rename for duplicate
+                     destURL = generateUniquePath(for: url, in: destination)
+                     NSLog("DEBUG: Duplicating \(url.lastPathComponent) to \(destURL.lastPathComponent)")
+                 } else {
+                     NSLog("DEBUG: Skipping \(url.lastPathComponent) (Same file)")
+                     continue
+                 }
+             }
+             
+             // Check for overwrite
+             // If we generated a unique path above, fileExists checks that unique path (which shouldn't exist, but good to check)
+             if fileManager.fileExists(atPath: destURL.path) {
+                 let fileName = url.lastPathComponent
+                 let shouldReplace = await promptForOverwrite(fileName: fileName)
+                 
+                 if !shouldReplace {
+                     NSLog("DEBUG: User cancelled overwrite for \(fileName)")
+                     continue
+                 }
+                 
+                 // If replace, delete existing first
+                 do {
+                     try fileManager.removeItem(at: destURL)
+                 } catch {
+                     NSLog("ERROR: Failed to delete existing item for overwrite: \(error)")
+                     // Abort this item if we can't delete the old one
+                     continue
+                 }
              }
              
              do {
@@ -347,7 +374,7 @@ class PaneState: ObservableObject, Identifiable {
                  
                  let sameVolume = srcValues.volumeIdentifier?.isEqual(destValues.volumeIdentifier) == true
                  
-                 if sameVolume {
+                 if sameVolume && !alwaysCopy {
                      NSLog("DEBUG: Moving \(url.path) to \(destURL.path)")
                      try fileManager.moveItem(at: url, to: destURL)
                      
@@ -532,7 +559,58 @@ class PaneState: ObservableObject, Identifiable {
         preservedSelection.removeAll()
         lastSelectedId = nil
     }
-}
+    
+    // MARK: - Prompts
+    @MainActor
+    private func promptForOverwrite(fileName: String) async -> Bool {
+        return await withCheckedContinuation { continuation in
+            let alert = NSAlert()
+            alert.messageText = "An item named \"\(fileName)\" already exists in this location."
+            alert.informativeText = "Do you want to replace it with the one you're moving?"
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Replace")
+            alert.addButton(withTitle: "Cancel")
+            
+            if let window = NSApp.keyWindow ?? NSApp.mainWindow {
+                alert.beginSheetModal(for: window) { response in
+                    continuation.resume(returning: response == .alertFirstButtonReturn)
+                }
+            } else {
+                let response = alert.runModal()
+                continuation.resume(returning: response == .alertFirstButtonReturn)
+            }
+            }
+        }
+    }
+    // MARK: - Helpers
+    
+    private func generateUniquePath(for url: URL, in directory: URL) -> URL {
+        let fileManager = FileManager.default
+        let name = url.deletingPathExtension().lastPathComponent
+        let ext = url.pathExtension
+        
+        // Try "copy"
+        var candidateName = "\(name) copy"
+        if !ext.isEmpty { candidateName += ".\(ext)" }
+        var candidateUrl = directory.appendingPathComponent(candidateName)
+        
+        if !fileManager.fileExists(atPath: candidateUrl.path) {
+            return candidateUrl
+        }
+        
+        // Try "copy 2", "copy 3", etc.
+        var counter = 2
+        while true {
+            candidateName = "\(name) copy \(counter)"
+            if !ext.isEmpty { candidateName += ".\(ext)" }
+            candidateUrl = directory.appendingPathComponent(candidateName)
+            
+            if !fileManager.fileExists(atPath: candidateUrl.path) {
+                return candidateUrl
+            }
+            counter += 1
+        }
+    }
 
 // Global Notification Definition
 extension Notification.Name {

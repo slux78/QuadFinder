@@ -43,13 +43,17 @@ struct HelpView: View {
                     // Features
                     SectionView(title: "Features", items: [
                         "Four independent file panes for efficient multitasking.",
-                        "Drag and drop files between panes.",
+                        "Smart Focus: Click anywhere to activate pane instantly.",
+                        "Drag and drop files between panes (Copy by default on valid keys).",
                         "Sidebar with Favorites and Mounted Volumes (Devices/DMGs).",
                         "Maximize any pane with a shortcut.",
                         "Quickly search files within any pane.",
                         "Integrated Terminal and Finder actions.",
                         "Drag sidebar edge to resize.",
-                        "Double-click .dmg files to mount them instantly."
+                        "Double-click .dmg files to mount them instantly.",
+                        "Overwrite Confirmation: Safer Move/Copy with 'Replace or Cancel'.",
+                        "Consistent Paste: Cmd+V always copies files.",
+                        "Delete to Trash: Support for shortcut and Drag-to-Dock."
                     ])
                     
                     Divider()
@@ -96,7 +100,8 @@ struct ShortcutsTable: View {
         ("Get Info", "⌘ + I"),
         ("Quick Look", "Space"),
         ("Copy", "⌘ + C"),
-        ("Paste", "⌘ + V"),
+        ("Paste (Always Copy)", "⌘ + V"),
+        ("Move to Trash", "⌘ + Backspace"),
         ("New Folder", "Right Click -> New Folder"),
         ("Rename", "Click Name or Right Click")
     ]
