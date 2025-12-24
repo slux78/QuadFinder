@@ -33,9 +33,9 @@ cat > "${APP_BUNDLE}/Contents/Info.plist" <<EOF
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.11</string>
+    <string>0.12</string>
     <key>CFBundleVersion</key>
-    <string>2</string>
+    <string>3</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>LSMinimumSystemVersion</key>
