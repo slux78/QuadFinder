@@ -44,9 +44,12 @@ struct HelpView: View {
                     SectionView(title: "Features", items: [
                         "Four independent file panes for efficient multitasking.",
                         "Drag and drop files between panes.",
+                        "Sidebar with Favorites and Mounted Volumes (Devices/DMGs).",
                         "Maximize any pane with a shortcut.",
                         "Quickly search files within any pane.",
-                        "Integrated Terminal and Finder actions."
+                        "Integrated Terminal and Finder actions.",
+                        "Drag sidebar edge to resize.",
+                        "Double-click .dmg files to mount them instantly."
                     ])
                     
                     Divider()

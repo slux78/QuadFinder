@@ -209,9 +209,29 @@ class FileListViewController: NSViewController, @preconcurrency NSTableViewDataS
             
             if item.isDirectory && !item.isPackage {
                 state.navigateTo(item.url)
+            } else if item.url.pathExtension.lowercased() == "dmg" {
+                mountDMG(at: item.url)
             } else {
                 NSWorkspace.shared.open(item.url)
             }
+        }
+    }
+    
+    private func mountDMG(at url: URL) {
+        let task = Process()
+        task.launchPath = "/usr/bin/hdiutil"
+        task.arguments = ["attach", url.path]
+        
+        do {
+            try task.run()
+            // Optional: Show some feedback or wait?
+            // Sidebar will auto-update via Notification.
+        } catch {
+            print("Failed to mount DMG: \(error)")
+            let alert = NSAlert()
+            alert.messageText = "Failed to mount disk image"
+            alert.informativeText = error.localizedDescription
+            alert.runModal()
         }
     }
     

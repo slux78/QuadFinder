@@ -32,15 +32,31 @@ struct ContentView: View {
     @State private var hSplitTop: CGFloat = 0.5
     @State private var hSplitBottom: CGFloat = 0.5
     
+    @State private var sidebarWidth: CGFloat = 200
+    
     var body: some View {
-        GeometryReader { geometry in
-            if let maxId = maximizedPaneId {
-                maximizedView(maxId: maxId)
-            } else {
-                quadLayout(geometry: geometry)
+        HStack(spacing: 0) {
+            SidebarView(activePaneId: $activePaneId, onNavigate: { url in
+                navigateTo(url.path)
+            })
+            .frame(width: sidebarWidth)
+            
+            QuadResizeHandle(orientation: .horizontal, onDrag: { delta in
+                let newWidth = sidebarWidth + delta
+                sidebarWidth = max(150, min(400, newWidth))
+            }, onReset: {
+                withAnimation { sidebarWidth = 200 }
+            })
+            
+            GeometryReader { geometry in
+                if let maxId = maximizedPaneId {
+                    maximizedView(maxId: maxId)
+                } else {
+                    quadLayout(geometry: geometry)
+                }
             }
         }
-        .frame(minWidth: 800, minHeight: 600)
+        .frame(minWidth: 950, minHeight: 600)
         .onAppear {
             DispatchQueue.main.async {
                 activePaneId = pane1.id // Default active
@@ -97,6 +113,17 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestGoFavorites)) { _ in
             showingPickerFav = true
+        }
+        .onReceive(NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.didUnmountNotification)) { notification in
+            guard let url = notification.userInfo?[NSWorkspace.volumeURLUserInfoKey] as? URL else { return }
+            let volumePath = url.path
+            
+            for pane in [pane1, pane2, pane3, pane4] {
+                let current = pane.currentPath.path
+                if current == volumePath || current.hasPrefix(volumePath + "/") {
+                    pane.navigateTo(FileManager.default.homeDirectoryForCurrentUser)
+                }
+            }
         }
     }
     
