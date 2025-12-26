@@ -79,6 +79,7 @@ class FileListViewController: NSViewController, @preconcurrency NSTableViewDataS
         
         // Drag and Drop Registration
         tableView.registerForDraggedTypes([.fileURL])
+        tableView.setDraggingSourceOperationMask(.every, forLocal: false)
         
         // Add Columns
         let cName = NSTableColumn(identifier: colName)
@@ -594,7 +595,30 @@ class FileListViewController: NSViewController, @preconcurrency NSTableViewDataS
     }
     
     func tableView(_ tableView: NSTableView, draggingSession session: NSDraggingSession, endedAt screenPoint: NSPoint, operation: NSDragOperation) {
-        print("DEBUG: Drag Session Ended.")
+        print("DEBUG: Drag Session Ended. Operation: \(operation.rawValue)")
+        
+        if operation.contains(.delete) {
+            print("DEBUG: operation contains .delete, moving items to trash")
+            guard let state = paneState else { return }
+            let urls = DraggingManager.shared.draggingUrls
+            
+            // Find items by URL and delete them
+            // We use a Task because moveToTrash is async (or uses undoManager which might be better called from MainActor properly)
+            // But moveToTrash in PaneState isn't async marked, but it calls async prompt if needed?
+            // Actually `moveToTrash` in `PaneState` (from my memory) takes undoManager.
+            // Let's check signature. 
+            // `moveToTrash(_ item: FileItem, undoManager: UndoManager?)`
+            
+            if !urls.isEmpty {
+                 Task { @MainActor in
+                     for url in urls {
+                         if let item = state.items.first(where: { $0.url == url }) {
+                             state.moveToTrash(item, undoManager: self.undoManager)
+                         }
+                     }
+                 }
+            }
+        }
         DraggingManager.shared.clear()
     }
     
