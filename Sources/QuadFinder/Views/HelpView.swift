@@ -44,7 +44,7 @@ struct HelpView: View {
                     SectionView(title: "Features", items: [
                         "Four independent file panes for efficient multitasking.",
                         "Smart Focus: Click anywhere to activate pane instantly.",
-                        "Drag and drop files between panes (Copy by default on valid keys).",
+                        "Drag and Drop files between panes (Option=Copy, Command=Move).",
                         "Sidebar with Favorites and Mounted Volumes (Devices/DMGs).",
                         "Maximize any pane with a shortcut.",
                         "Quickly search files within any pane.",

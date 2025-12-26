@@ -629,28 +629,28 @@ class FileListViewController: NSViewController, @preconcurrency NSTableViewDataS
     func tableView(_ tableView: NSTableView, validateDrop info: NSDraggingInfo, proposedRow row: Int, proposedDropOperation dropOperation: NSTableView.DropOperation) -> NSDragOperation {
         guard let state = paneState else { return [] }
         
-        // Only allow dropping ON a folder (to move into it) or possibly between rows if we supported custom ordering (we don't).
-        // For whitespace drop (row == -1 or after last), it means drop into CURRENT folder (the pane's path).
+        // Determine intended operation based on modifiers
+        let flags = NSApp.currentEvent?.modifierFlags ?? []
+        var op: NSDragOperation = .every // Default to letting system decide (Move same vol, Copy diff vol)
+        
+        if flags.contains(.option) {
+            op = .copy
+        } else if flags.contains(.command) {
+            op = .move
+        }
         
         if dropOperation == .on {
-            // Check if target is a directory
             if row >= 0 && row < state.sortedItems.count {
                 let targetItem = state.sortedItems[row]
                 if targetItem.isDirectory && !targetItem.isPackage {
-                    // Highlight the row? NSTableView does this automatically with .on
-                    return .move // Or .copy depending on modifier keys, but .every is safer to let system decide default
+                    return op
                 }
             }
         } else {
-            // Drop in white space (into current directory)
-            // We want to visually allow it.
-             tableView.setDropRow(-1, dropOperation: .on) // Retarget to whole view essentially?
-             // Actually, strictly dropping "between" rows doesn't make sense for sorted list.
-             // We should interpret everything not "on" a folder as "into current background".
-             return .move
+            tableView.setDropRow(-1, dropOperation: .on)
+            return op
         }
         
-        print("DEBUG: validateDrop. Row: \(row), Op: \(dropOperation.rawValue). SourceMask: \(info.draggingSourceOperationMask.rawValue)")
         return []
     }
     
@@ -659,15 +659,8 @@ class FileListViewController: NSViewController, @preconcurrency NSTableViewDataS
         let pboard = info.draggingPasteboard
         
         guard let urls = pboard.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !urls.isEmpty else {
-            print("DEBUG: acceptDrop failed to read URLs.")
             return false
         }
-        
-        print("DEBUG: acceptDrop read \(urls.count) URLs.")
-        
-        // Target:
-        // If row >= 0 and .on, it's a specific subfolder.
-        // If row == -1, it's the current folder (state.currentPath).
         
         var targetUrl = state.currentPath
         
@@ -678,9 +671,14 @@ class FileListViewController: NSViewController, @preconcurrency NSTableViewDataS
             }
         }
         
+        // Check Modifiers for Action
+        let flags = NSApp.currentEvent?.modifierFlags ?? []
+        let alwaysCopy = flags.contains(.option)
+        let forceMove = flags.contains(.command)
+        
         // Execute Drop
         Task { @MainActor in
-            await state.handleDrop(urls: urls, to: targetUrl)
+            await state.handleDrop(urls: urls, to: targetUrl, undoManager: self.undoManager, alwaysCopy: alwaysCopy, forceMove: forceMove)
         }
         
         return true
