@@ -271,6 +271,7 @@ struct FilePaneView: View {
                 copySelection()
             }
             .keyboardShortcut("c", modifiers: .command)
+            .keyboardShortcut("c", modifiers: .command)
             .disabled(!isActive)
             .opacity(0)
         )
@@ -278,6 +279,7 @@ struct FilePaneView: View {
              Button("") {
                  pasteItems()
              }
+             .keyboardShortcut("v", modifiers: .command)
              .keyboardShortcut("v", modifiers: .command)
              .disabled(!isActive)
              .opacity(0)
@@ -287,6 +289,7 @@ struct FilePaneView: View {
                  deleteSelection()
              }
              .keyboardShortcut(.delete, modifiers: .command)
+             .keyboardShortcut(.delete, modifiers: .command)
              .disabled(!isActive)
              .opacity(0)
         )
@@ -294,6 +297,7 @@ struct FilePaneView: View {
              Button("") {
                  state.goUp()
              }
+             .keyboardShortcut(.upArrow, modifiers: .command)
              .keyboardShortcut(.upArrow, modifiers: .command)
              .disabled(!isActive)
              .opacity(0)
@@ -303,6 +307,7 @@ struct FilePaneView: View {
                  openSelection()
              }
              .keyboardShortcut(.downArrow, modifiers: .command)
+             .keyboardShortcut(.downArrow, modifiers: .command)
              .disabled(!isActive)
              .opacity(0)
         )
@@ -310,6 +315,7 @@ struct FilePaneView: View {
              Button("") {
                  state.goBack()
              }
+             .keyboardShortcut("[", modifiers: .command)
              .keyboardShortcut("[", modifiers: .command)
              .disabled(!isActive)
              .opacity(0)
@@ -319,12 +325,19 @@ struct FilePaneView: View {
                  state.goForward()
              }
              .keyboardShortcut("]", modifiers: .command)
+             .keyboardShortcut("]", modifiers: .command)
              .disabled(!isActive)
              .opacity(0)
         )
     }
     
     private func copySelection() {
+        // Fix: Check if a text field is focused (e.g. rename) and forward action
+        if let window = NSApp.keyWindow, let responder = window.firstResponder, responder is NSText {
+             NSApp.sendAction(#selector(NSText.copy(_:)), to: nil, from: nil)
+             return
+        }
+        
         let urls = state.items.filter { state.selectedItems.contains($0.id) }.map { $0.url as NSURL }
         guard !urls.isEmpty else { return }
         NSPasteboard.general.clearContents()
@@ -333,6 +346,12 @@ struct FilePaneView: View {
     }
     
     private func pasteItems() {
+        // Fix: Check if a text field is focused (e.g. rename) and forward action
+        if let window = NSApp.keyWindow, let responder = window.firstResponder, responder is NSText {
+             NSApp.sendAction(#selector(NSText.paste(_:)), to: nil, from: nil)
+             return
+        }
+        
         guard NSPasteboard.general.canReadObject(forClasses: [NSURL.self], options: nil) else { return }
         
         guard let urls = NSPasteboard.general.readObjects(forClasses: [NSURL.self], options: nil) as? [URL], !urls.isEmpty else { return }
@@ -344,6 +363,12 @@ struct FilePaneView: View {
     }
     
     private func deleteSelection() {
+        // Fix: Check if a text field is focused (e.g. rename) and forward action
+        if let window = NSApp.keyWindow, let responder = window.firstResponder, responder is NSText {
+             NSApp.sendAction(#selector(NSText.deleteToBeginningOfLine(_:)), to: nil, from: nil)
+             return
+        }
+        
         let items = state.items.filter { state.selectedItems.contains($0.id) }
         guard !items.isEmpty else { return }
         
