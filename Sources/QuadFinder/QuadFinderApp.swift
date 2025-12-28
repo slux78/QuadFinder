@@ -134,6 +134,8 @@ extension AppDelegate: NSUserInterfaceItemSearching {
 extension Notification.Name {
     static let requestAddFavorite = Notification.Name("requestAddFavorite")
     static let requestGoFavorites = Notification.Name("requestGoFavorites")
+    static let requestRenameTab = Notification.Name("requestRenameTab")
+    static let requestNewFolder = Notification.Name("requestNewFolder")
 }
 
 @main
@@ -161,6 +163,17 @@ struct QuadFinderApp: App {
                 Button("Manage Favorites...") {
                     appDelegate.showManageFavoritesWindow()
                 }
+            }
+            CommandGroup(after: .newItem) {
+                Button("New Folder") {
+                    NotificationCenter.default.post(name: .requestNewFolder, object: NSApp.keyWindow)
+                }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
+                
+                Button("Rename Tab...") {
+                    NotificationCenter.default.post(name: .requestRenameTab, object: NSApp.keyWindow)
+                }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
             }
             CommandGroup(replacing: .help) {
                 Button("QuadFinder Help") {

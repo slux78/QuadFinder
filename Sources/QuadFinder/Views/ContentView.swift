@@ -34,6 +34,12 @@ struct ContentView: View {
     
     @State private var sidebarWidth: CGFloat = 200
     
+    // Window Title Logic
+    @State private var windowTitle: String = "QuadFinder"
+    @State private var showingRenameAlert = false
+    @State private var tempTitle = ""
+    @State private var myWindow: NSWindow?
+    
     var body: some View {
         HStack(spacing: 0) {
             SidebarView(activePaneId: $activePaneId, onNavigate: { url in
@@ -57,6 +63,7 @@ struct ContentView: View {
             }
         }
         .frame(minWidth: 950, minHeight: 600)
+        .navigationTitle(windowTitle)
         .onAppear {
             DispatchQueue.main.async {
                 activePaneId = pane1.id // Default active
@@ -124,6 +131,36 @@ struct ContentView: View {
                     pane.navigateTo(FileManager.default.homeDirectoryForCurrentUser)
                 }
             }
+        }
+        .background(
+            WindowAccessor { window in
+                self.myWindow = window
+            }
+        )
+        .onReceive(NotificationCenter.default.publisher(for: .requestNewFolder)) { notification in
+            // Filter: Only respond if this view's window is the target (keyWindow)
+            if let targetWindow = notification.object as? NSWindow, targetWindow == myWindow {
+                if let activeId = activePaneId,
+                   let pane = [pane1, pane2, pane3, pane4].first(where: { $0.id == activeId }) {
+                    pane.createNewFolder()
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .requestRenameTab)) { notification in
+            // Filter: Only respond if this view's window is the target (keyWindow)
+            if let targetWindow = notification.object as? NSWindow, targetWindow == myWindow {
+                tempTitle = windowTitle
+                showingRenameAlert = true
+            }
+        }
+        .alert("Rename Tab", isPresented: $showingRenameAlert) {
+            TextField("New Name", text: $tempTitle)
+            Button("Rename") {
+                windowTitle = tempTitle
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Enter a new name for this tab.")
         }
     }
     

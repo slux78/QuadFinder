@@ -185,6 +185,21 @@ class FileListViewController: NSViewController, @preconcurrency NSTableViewDataS
         
         // Sync Selection FROM State TO Table
         syncSelectionFromState()
+        
+        // Sync Renaming State
+        if let renamingId = state.renamingItemId {
+            if let row = state.sortedItems.firstIndex(where: { $0.id == renamingId }) {
+                // Only trigger if not already editing this row to avoid interruption
+                if tableView.editedRow != row {
+                    DispatchQueue.main.async {
+                        // Re-verify row validity and state
+                        if row < self.tableView.numberOfRows && self.tableView.editedRow != row {
+                            self.tableView.editColumn(0, row: row, with: nil, select: true)
+                        }
+                    }
+                }
+            }
+        }
     }
     
     func syncSelectionFromState() {
@@ -762,9 +777,13 @@ class FileListViewController: NSViewController, @preconcurrency NSTableViewDataS
             if !newName.isEmpty {
                 state.renameItem(item, to: newName, undoManager: undoManager)
             } else {
-                // Revert if empty
+                // Revert if empty and clear state
                 textField.stringValue = item.name
+                state.renamingItemId = nil
             }
+        } else {
+            // No change, clear state
+            state.renamingItemId = nil
         }
     }
 }

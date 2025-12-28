@@ -53,7 +53,10 @@ struct HelpView: View {
                         "Double-click .dmg files to mount them instantly.",
                         "Overwrite Confirmation: Safer Move/Copy with 'Replace or Cancel'.",
                         "Consistent Paste: Cmd+V always copies files.",
-                        "Delete to Trash: Support for shortcut and Drag-to-Dock."
+                        "Consistent Paste: Cmd+V always copies files.",
+                        "Delete to Trash: Support for shortcut and Drag-to-Dock.",
+                        "Rename Tab: Customize window title via File menu.",
+                        "New Folder: Quickly create folders (Cmd+Shift+N) with auto-rename."
                     ])
                     
                     Divider()
@@ -106,8 +109,10 @@ struct ShortcutsTable: View {
         ("Open Selected", "⌘ + Down"),
         ("Go Back", "⌘ + ["),
         ("Go Forward", "⌘ + ]"),
-        ("New Folder", "Right Click -> New Folder"),
-        ("Rename", "Click Name or Right Click")
+        ("Go Forward", "⌘ + ]"),
+        ("New Folder", "⌘ + Shift + N"),
+        ("Rename Tab", "⌘ + Shift + R"),
+        ("Rename File", "Click Name or Right Click")
     ]
     
     var body: some View {

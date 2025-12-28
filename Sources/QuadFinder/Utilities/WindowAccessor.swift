@@ -22,6 +22,8 @@ import AppKit
 struct WindowAccessor: NSViewRepresentable {
     // Shared state to track the last active window size
     static var standardWindowSize: CGSize?
+    
+    var onWindow: (NSWindow?) -> Void = { _ in }
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -31,6 +33,8 @@ struct WindowAccessor: NSViewRepresentable {
         let view = NSView()
         DispatchQueue.main.async {
             if let window = view.window {
+                self.onWindow(window)
+                
                 // Set delegate to track resizing
                 window.delegate = context.coordinator
                 

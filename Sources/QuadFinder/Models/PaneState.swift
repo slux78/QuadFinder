@@ -473,6 +473,19 @@ class PaneState: ObservableObject, Identifiable {
         
         do {
             try FileManager.default.createDirectory(at: targetUrl, withIntermediateDirectories: false, attributes: nil)
+            
+            // Reload and start renaming
+            Task { @MainActor in
+                self.loadContents()
+                // Small delay to ensure UI updates before finding item
+                try? await Task.sleep(nanoseconds: 100 * 1_000_000) // 100ms
+                
+                if let newItem = self.items.first(where: { $0.url.lastPathComponent == targetName }) {
+                    self.select(newItem)
+                    self.startRenaming(newItem)
+                }
+            }
+            
             return targetUrl
         } catch {
             print("Error creating directory: \(error)")
